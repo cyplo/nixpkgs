@@ -1,7 +1,7 @@
 # Updating? Keep $out/etc synchronized with passthru.filesInstalledToEtc
 
 { stdenv
-, fetchurl
+, fetchFromGitHub
 , substituteAll
 , gtk-doc
 , pkgconfig
@@ -88,10 +88,12 @@ stdenv.mkDerivation rec {
   pname = "fwupd";
   version = "1.2.10";
 
-  src = fetchurl {
-    url = "https://people.freedesktop.org/~hughsient/releases/fwupd-${version}.tar.xz";
-    sha256 = "0inngs7i48akm9c7fmdsf9zjif595rkaba69rl76jfwfv8r21vjb";
-  };
+    src = fetchFromGitHub {
+      owner = "fwupd";
+      repo = "fwupd";
+      rev = "${version}";
+      sha256 = "016d2qmj4kyi2np3q5if93qranza3i25isb1l50i38s8bin988cj";
+    };
 
   outputs = [ "out" "lib" "dev" "devdoc" "man" "installedTests" ];
 
