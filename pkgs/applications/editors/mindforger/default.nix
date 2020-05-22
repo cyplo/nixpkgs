@@ -1,4 +1,10 @@
-{ mkDerivation, stdenv, fetchurl, qmake, qtbase, qtwebkit, cmarkgfm }:
+{ mkDerivation
+, cmark-gfm
+, fetchurl
+, qmake
+, qtbase
+, qtwebkit
+, stdenv }:
 
 mkDerivation rec {
   pname = "mindforger";
@@ -10,7 +16,7 @@ mkDerivation rec {
   };
 
   nativeBuildInputs = [ qmake ] ;
-  buildInputs = [ qtbase qtwebkit cmarkgfm ] ;
+  buildInputs = [ qtbase qtwebkit cmark-gfm ] ;
 
   doCheck = true;
 
