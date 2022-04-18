@@ -197,6 +197,11 @@ in
           '';
           example = "find /home/matt/git -type d -name .git";
         };
+        niceness = mkOption {
+          type = types.int;
+          default = 10;
+          description = "Niceness level at which to run the backup.";
+        };
       };
     }));
     default = {};
@@ -250,23 +255,29 @@ in
             nameValuePair (rcloneAttrToOpt name) (toRcloneVal value)
           ) backup.rcloneOptions) // optionalAttrs (backup.rcloneConfigFile != null) {
             RCLONE_CONFIG = backup.rcloneConfigFile;
-          } // optionalAttrs (backup.rcloneConfig != null) (mapAttrs' (name: value:
-            nameValuePair (rcloneAttrToConf name) (toRcloneVal value)
-          ) backup.rcloneConfig);
-          path = [ pkgs.openssh ];
-          restartIfChanged = false;
-          serviceConfig = {
-            Type = "oneshot";
-            ExecStart = (optionals (backupPaths != "") [ "${resticCmd} backup --cache-dir=%C/restic-backups-${name} ${concatStringsSep " " backup.extraBackupArgs} ${backupPaths}" ])
-                        ++ pruneCmd;
-            User = backup.user;
-            RuntimeDirectory = "restic-backups-${name}";
-            CacheDirectory = "restic-backups-${name}";
-            CacheDirectoryMode = "0700";
-          } // optionalAttrs (backup.environmentFile != null) {
-            EnvironmentFile = backup.environmentFile;
-          };
-        } // optionalAttrs (backup.initialize || backup.dynamicFilesFrom != null) {
+          } // optionalAttrs (backup.rcloneConfig != null) (mapAttrs'
+            (name: value:
+              nameValuePair (rcloneAttrToConf name) (toRcloneVal value))
+            backup.rcloneConfig);
+        path = [ pkgs.openssh ];
+        restartIfChanged = false;
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = (optionals (backupPaths != "") [
+            "${resticCmd} backup --cache-dir=%C/restic-backups-${name} ${
+              concatStringsSep " " backup.extraBackupArgs
+            } ${backupPaths}"
+          ]) ++ pruneCmd;
+          User = backup.user;
+          RuntimeDirectory = "restic-backups-${name}";
+          CacheDirectory = "restic-backups-${name}";
+          CacheDirectoryMode = "0700";
+        } // optionalAttrs (backup.environmentFile != null) {
+          EnvironmentFile = backup.environmentFile;
+          Nice = backup.niceness;
+        };
+      } // optionalAttrs
+        (backup.initialize || backup.dynamicFilesFrom != null) {
           preStart = ''
             ${optionalString (backup.initialize) ''
               ${resticCmd} snapshots || ${resticCmd} init
